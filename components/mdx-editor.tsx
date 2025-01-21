@@ -159,7 +159,9 @@ export default function MDXEditor() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const [showMinimap, setShowMinimap] = useState(true);
-  const [wordWrap, setWordWrap] = useState("on");
+  const [wordWrap, setWordWrap] = useState<
+    "on" | "off" | "wordWrapColumn" | "bounded"
+  >("on");
   const [showLineNumbers, setShowLineNumbers] = useState(true);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
   const [editor, setEditor] = useState<any>(null);
@@ -561,7 +563,6 @@ export default function MDXEditor() {
                   matchBrackets: "always",
                   glyphMargin: true, // Enable glyph margin for error icons
                   lineDecorationsWidth: 10,
-                  renderIndicators: true,
                 }}
               />
               <div className="h-6 border-t bg-muted px-2 text-xs flex items-center justify-between">
