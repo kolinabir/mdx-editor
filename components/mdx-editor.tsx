@@ -152,6 +152,35 @@ const components = {
 };
 
 export default function MDXEditor() {
+  const DEMO_CONTENT = `# 👋 Hi there, I'm [Your Name]
+
+  ## 👨‍💻 About Me
+  I'm a passionate software developer from [Your Location]
+  - 🔭 I'm currently working on [Current Project]
+  - 🌱 I'm currently learning [Technology/Skill]
+  - 👯 I'm looking to collaborate on interesting projects
+  - 💬 Ask me about web development, JavaScript, and React
+  - 📫 How to reach me: [your.email@example.com]
+
+  ## 🛠️ Technologies & Tools
+  ![](https://img.shields.io/badge/Code-JavaScript-informational?style=flat&logo=javascript&logoColor=white&color=2bbc8a)
+  ![](https://img.shields.io/badge/Code-React-informational?style=flat&logo=react&logoColor=white&color=2bbc8a)
+  ![](https://img.shields.io/badge/Code-Python-informational?style=flat&logo=python&logoColor=white&color=2bbc8a)
+  ![](https://img.shields.io/badge/Tools-Docker-informational?style=flat&logo=docker&logoColor=white&color=2bbc8a)
+
+  ## 📊 GitHub Stats
+  ![Your GitHub stats](https://github-readme-stats.vercel.app/api?username=yourusername&show_icons=true&theme=radical)
+
+  ## 🔝 Top Languages
+  [![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=yourusername&layout=compact&theme=radical)](https://github.com/anuraghazra/github-readme-stats)
+
+  ## 🔗 Connect with me
+  [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/yourusername)
+  [![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/yourusername)
+
+  ## ⭐ Featured Projects
+  [![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=yourusername&repo=your-repo-name)](https://github.com/yourusername/your-repo-name)`;
+
   const [mounted, setMounted] = useState(false);
   const [content, setContent] = useState("");
   const [compiledSource, setCompiledSource] = useState<any>(null);
@@ -334,9 +363,13 @@ export default function MDXEditor() {
       const saved = localStorage.getItem("github-readme-content");
       if (saved) {
         setContent(saved);
+      } else {
+        setContent(DEMO_CONTENT);
+        localStorage.setItem("github-readme-content", DEMO_CONTENT);
       }
     } catch (error) {
       console.error("Failed to load content:", error);
+      setContent(DEMO_CONTENT);
     }
   }, [mounted]);
 
