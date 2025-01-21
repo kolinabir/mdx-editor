@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
@@ -17,56 +16,6 @@ import { Copy, Sun, Moon, Upload } from "lucide-react";
 import { MDXProvider } from "@mdx-js/react";
 import { MDXRemote } from "next-mdx-remote";
 
-const DEFAULT_GITHUB_README = `# My Awesome Project
-
-<div style={{ textAlign: 'center' }}>
-
-![Project Banner](https://placehold.co/800x400)
-
-[![GitHub stars](https://img.shields.io/badge/stars-4.5k-yellow)](https://github.com/username/repo/stargazers)
-[![GitHub forks](https://img.shields.io/badge/forks-1.2k-blue)](https://github.com/username/repo/network)
-[![GitHub issues](https://img.shields.io/badge/issues-25-red)](https://github.com/username/repo/issues)
-[![GitHub license](https://img.shields.io/badge/license-MIT-green)](https://github.com/username/repo/blob/main/LICENSE)
-
-</div>
-
-## 🚀 About The Project
-
-A brief description of your project goes here. Make it compelling!
-
-### Built With
-
-* [Next.js](https://nextjs.org/)
-* [React](https://reactjs.org/)
-* [TypeScript](https://www.typescriptlang.org/)
-
-## 🛠️ Installation
-
-1. Clone the repo
-   \`\`\`sh
-   git clone https://github.com/username/repo.git
-   \`\`\`
-
-2. Install NPM packages
-   \`\`\`sh
-   npm install
-   \`\`\`
-
-## 📝 Usage
-
-Add usage examples here...
-
-## 🤝 Contributing
-
-Contributions are welcome!
-
-## 📫 Contact
-
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle)
-
-Project Link: [https://github.com/username/repo](https://github.com/username/repo)
-`;
-
 const components = {
   // Base components
   p: (props) => <p className="mb-4 leading-7" {...props} />,
@@ -75,7 +24,7 @@ const components = {
   ),
   h2: (props) => (
     <h2
-      className="mb-4 mt-8 text-2xl font-semibold tracking-tight"
+      className="mb-4 mt-8 text-2xl font-semibold tracking-tight flex items-center gap-2"
       {...props}
     />
   ),
@@ -92,16 +41,20 @@ const components = {
   li: (props) => <li className="leading-7" {...props} />,
 
   // Inline components
-  a: ({ href, ...props }) => (
+  a: ({ href, children, ...props }) => (
     <a
       href={href}
-      className="text-blue-500 hover:text-blue-600 hover:underline transition-colors"
+      className="text-blue-500 hover:text-blue-600 hover:underline transition-colors inline-block"
       target="_blank"
       rel="noopener noreferrer"
       {...props}
-    />
+    >
+      {children}
+    </a>
   ),
-  img: ({ src, alt, ...props }) => {
+
+  // Enhanced image component
+  img: ({ src, alt, width, style, ...props }) => {
     // Function to verify if URL is valid
     const isValidUrl = (urlString: string) => {
       try {
@@ -112,29 +65,34 @@ const components = {
       }
     };
 
-    // Handle both images and badges
-    const isBadge = src.includes("img.shields.io");
-    const defaultSize = isBadge ? "200x30" : "600x400";
-
-    // Use placehold.co as fallback if src is not a valid URL
+    // Handle empty or invalid src
     const imageSrc = isValidUrl(src)
       ? src
-      : `https://placehold.co/${defaultSize}?text=${encodeURIComponent(
+      : `https://placehold.co/600x400?text=${encodeURIComponent(
           alt || "Image"
         )}`;
+
+    // Determine if it's a badge
+    const isBadge = src?.includes("shields.io") || src?.includes("badge");
 
     return (
       <img
         src={imageSrc}
         alt={alt || ""}
-        className={`${
-          isBadge ? "inline-block h-5" : "max-w-full h-auto rounded-lg my-4"
-        } mx-auto`}
+        style={{
+          ...style,
+          width: width || (isBadge ? "auto" : "100%"),
+          maxWidth: isBadge ? "none" : "100%",
+        }}
+        className={`
+          ${isBadge ? "inline-block h-6" : "rounded-lg my-4"} 
+          mx-auto
+        `}
         loading="lazy"
         onError={(e) => {
           const target = e.target as HTMLImageElement;
-          target.onerror = null; // Prevent infinite loop
-          target.src = `https://placehold.co/${defaultSize}?text=${encodeURIComponent(
+          target.onerror = null;
+          target.src = `https://placehold.co/600x400?text=${encodeURIComponent(
             alt || "Image"
           )}`;
         }}
@@ -143,56 +101,17 @@ const components = {
     );
   },
 
-  // Code components
-  pre: (props) => (
-    <pre
-      className="overflow-x-auto rounded-lg bg-gray-100 dark:bg-gray-800 p-4 my-4"
-      {...props}
-    />
-  ),
-  code: ({ className, ...props }) => (
-    <code
-      className={
-        className
-          ? `${className} text-sm`
-          : "bg-gray-100 dark:bg-gray-800 rounded-md px-1.5 py-0.5 text-sm"
-      }
-      {...props}
-    />
-  ),
-
-  // Table components
-  table: (props) => (
-    <div className="my-6 w-full overflow-x-auto">
-      <table
-        className="w-full border-collapse border border-gray-200 dark:border-gray-700"
-        {...props}
-      />
+  // Container components
+  div: ({ style, children, ...props }) => (
+    <div style={style} className="w-full my-4" {...props}>
+      {children}
     </div>
   ),
-  thead: (props) => (
-    <thead className="bg-gray-50 dark:bg-gray-800" {...props} />
-  ),
-  th: (props) => (
-    <th
-      className="border border-gray-200 dark:border-gray-700 px-4 py-2 text-left font-semibold"
-      {...props}
-    />
-  ),
-  td: (props) => (
-    <td
-      className="border border-gray-200 dark:border-gray-700 px-4 py-2"
-      {...props}
-    />
-  ),
-
-  // Container components
-  div: (props) => <div className="w-full" {...props} />,
 };
 
 export default function MDXEditor() {
   const [mounted, setMounted] = useState(false);
-  const [content, setContent] = useState(DEFAULT_GITHUB_README);
+  const [content, setContent] = useState("");
   const [compiledSource, setCompiledSource] = useState<any>(null);
   const [compileError, setCompileError] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
@@ -209,7 +128,43 @@ export default function MDXEditor() {
       setCompileError(null);
 
       try {
-        const compiled = await serialize(markdown, {
+        // Preprocess the markdown to fix common issues
+        let processedMarkdown = markdown
+          // Fix HTML comments
+          .replace(/<!--[\s\S]*?-->/g, "")
+          // Fix div alignment
+          .replace(/<div align="(.*?)">/g, '<div style={{ textAlign: "$1" }}>')
+          // Fix img alignment
+          .replace(
+            /<img align="(.*?)"(.*?)>/g,
+            '<img style={{ float: "$1" }}$2>'
+          )
+          // Allow <img> without an explicit closing tag by converting them to self-closing format
+          .replace(/<img([^>]*)(?<!\/)>/g, "<img$1/>")
+          // Auto-close unclosed <div> tags
+          .replace(/<div([^>]*)>(?![\s\S]*<\/div>)/g, "<div$1></div>")
+          // Remove &nbsp;
+          .replace(/&nbsp;/g, " ")
+          // Fix HTML style attributes
+          .replace(/style="([^"]*)"/g, (match, styles) => {
+            const cssProps = styles
+              .split(";")
+              .filter(Boolean)
+              .map((prop) => {
+                const [key, value] = prop.split(":").map((s) => s.trim());
+                return `${key}: "${value}"`;
+              })
+              .join(", ");
+            return `style={{ ${cssProps} }}`;
+          });
+
+        let openDivs = (processedMarkdown.match(/<div\b(?!\/)/g) || []).length;
+        let closedDivs = (processedMarkdown.match(/<\/div>/g) || []).length;
+        if (openDivs > closedDivs) {
+          processedMarkdown += "</div>".repeat(openDivs - closedDivs);
+        }
+
+        const compiled = await serialize(processedMarkdown, {
           mdxOptions: {
             development: process.env.NODE_ENV === "development",
             remarkPlugins: [remarkGfm],
@@ -259,29 +214,11 @@ export default function MDXEditor() {
     }
   }, [mounted]);
 
-  const preprocessMarkdown = (markdown: string) => {
-    // Convert <div align="center"> to MDX style
-    markdown = markdown.replace(
-      /<div align="center">/g,
-      '<div style={{ textAlign: "center" }}>'
-    );
-
-    // Convert other HTML attributes to MDX style as needed
-    markdown = markdown.replace(
-      /<img([^>]*)align="([^"]*)"([^>]*)>/g,
-      '<img$1style={{ margin: "$2" === "center" ? "0 auto" : "0" }}$3>'
-    );
-
-    return markdown;
-  };
-
   const handleEditorChange = (value: string | undefined) => {
     if (value === undefined) return;
-
-    const processedValue = preprocessMarkdown(value);
-    setContent(processedValue);
+    setContent(value);
     try {
-      localStorage.setItem("github-readme-content", processedValue);
+      localStorage.setItem("github-readme-content", value);
     } catch (error) {
       console.error("Failed to save content:", error);
     }
@@ -294,8 +231,7 @@ export default function MDXEditor() {
       reader.onload = (e) => {
         const text = e.target?.result;
         if (typeof text === "string") {
-          const processedText = preprocessMarkdown(text);
-          setContent(processedText);
+          setContent(text);
           toast({
             title: "Success",
             description: "File loaded successfully",
@@ -400,7 +336,9 @@ export default function MDXEditor() {
                 {compileError ? (
                   <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
                     <h3 className="font-semibold">Compilation Error</h3>
-                    <p className="mt-1 text-sm">{compileError}</p>
+                    <p className="mt-1 text-sm whitespace-pre-wrap">
+                      {compileError}
+                    </p>
                   </div>
                 ) : compiledSource && mounted ? (
                   <MDXProvider components={components}>
