@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
@@ -16,17 +17,16 @@ import { Copy, Sun, Moon, Upload } from "lucide-react";
 import { MDXProvider } from "@mdx-js/react";
 import { MDXRemote } from "next-mdx-remote";
 
-// Default content showing proper MDX syntax
 const DEFAULT_GITHUB_README = `# My Awesome Project
 
 <div style={{ textAlign: 'center' }}>
 
-![Project Banner](https://via.placeholder.com/800x400)
+![Project Banner](https://placehold.co/800x400)
 
-[![GitHub stars](https://img.shields.io/github/stars/username/repo)](https://github.com/username/repo/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/username/repo)](https://github.com/username/repo/network)
-[![GitHub issues](https://img.shields.io/github/issues/username/repo)](https://github.com/username/repo/issues)
-[![GitHub license](https://img.shields.io/github/license/username/repo)](https://github.com/username/repo/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/badge/stars-4.5k-yellow)](https://github.com/username/repo/stargazers)
+[![GitHub forks](https://img.shields.io/badge/forks-1.2k-blue)](https://github.com/username/repo/network)
+[![GitHub issues](https://img.shields.io/badge/issues-25-red)](https://github.com/username/repo/issues)
+[![GitHub license](https://img.shields.io/badge/license-MIT-green)](https://github.com/username/repo/blob/main/LICENSE)
 
 </div>
 
@@ -101,13 +101,47 @@ const components = {
       {...props}
     />
   ),
-  img: (props) => (
-    <img
-      className="max-w-full h-auto rounded-lg my-4"
-      loading="lazy"
-      {...props}
-    />
-  ),
+  img: ({ src, alt, ...props }) => {
+    // Function to verify if URL is valid
+    const isValidUrl = (urlString: string) => {
+      try {
+        new URL(urlString);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    };
+
+    // Handle both images and badges
+    const isBadge = src.includes("img.shields.io");
+    const defaultSize = isBadge ? "200x30" : "600x400";
+
+    // Use placehold.co as fallback if src is not a valid URL
+    const imageSrc = isValidUrl(src)
+      ? src
+      : `https://placehold.co/${defaultSize}?text=${encodeURIComponent(
+          alt || "Image"
+        )}`;
+
+    return (
+      <img
+        src={imageSrc}
+        alt={alt || ""}
+        className={`${
+          isBadge ? "inline-block h-5" : "max-w-full h-auto rounded-lg my-4"
+        } mx-auto`}
+        loading="lazy"
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.onerror = null; // Prevent infinite loop
+          target.src = `https://placehold.co/${defaultSize}?text=${encodeURIComponent(
+            alt || "Image"
+          )}`;
+        }}
+        {...props}
+      />
+    );
+  },
 
   // Code components
   pre: (props) => (
@@ -153,7 +187,7 @@ const components = {
   ),
 
   // Container components
-  div: (props) => <div {...props} />,
+  div: (props) => <div className="w-full" {...props} />,
 };
 
 export default function MDXEditor() {
@@ -225,7 +259,6 @@ export default function MDXEditor() {
     }
   }, [mounted]);
 
-  // Convert HTML-style markdown to MDX-style before setting content
   const preprocessMarkdown = (markdown: string) => {
     // Convert <div align="center"> to MDX style
     markdown = markdown.replace(
@@ -233,7 +266,12 @@ export default function MDXEditor() {
       '<div style={{ textAlign: "center" }}>'
     );
 
-    // Add similar conversions for other HTML attributes as needed
+    // Convert other HTML attributes to MDX style as needed
+    markdown = markdown.replace(
+      /<img([^>]*)align="([^"]*)"([^>]*)>/g,
+      '<img$1style={{ margin: "$2" === "center" ? "0 auto" : "0" }}$3>'
+    );
+
     return markdown;
   };
 
