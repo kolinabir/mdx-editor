@@ -40,24 +40,12 @@ npm run dev
 yarn dev
 ```
 
-## Project Structure
-
-```
-project/
-├── public/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── styles/
-└── package.json
-```
 
 ## Available Scripts
 
 - `npm run dev` - Starts development server
 - `npm run build` - Creates production build
-- `npm run test` - Runs test suite
-- `npm run lint` - Runs linting
+
 
 ## MDX Editor Component
 
