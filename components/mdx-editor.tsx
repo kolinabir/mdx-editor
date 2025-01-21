@@ -17,32 +17,43 @@ import { Copy, Sun, Moon, Upload } from "lucide-react";
 import { MDXProvider } from "@mdx-js/react";
 import { MDXRemote } from "next-mdx-remote";
 
+type ComponentProps = {
+  children?: React.ReactNode;
+  style?: React.CSSProperties;
+  className?: string;
+  [key: string]: any;
+};
+
 const components = {
   // Base components
-  p: (props) => <p className="mb-4 leading-7" {...props} />,
-  h1: (props) => (
+  p: (props: ComponentProps) => <p className="mb-4 leading-7" {...props} />,
+  h1: (props: ComponentProps) => (
     <h1 className="mb-6 text-4xl font-bold tracking-tight" {...props} />
   ),
-  h2: (props) => (
+  h2: (props: ComponentProps) => (
     <h2
       className="mb-4 mt-8 text-2xl font-semibold tracking-tight flex items-center gap-2"
       {...props}
     />
   ),
-  h3: (props) => (
+  h3: (props: ComponentProps) => (
     <h3 className="mb-4 mt-6 text-xl font-semibold tracking-tight" {...props} />
   ),
-  h4: (props) => (
+  h4: (props: ComponentProps) => (
     <h4 className="mb-4 mt-6 text-lg font-semibold tracking-tight" {...props} />
   ),
 
   // List components
-  ul: (props) => <ul className="mb-4 list-disc pl-6 space-y-2" {...props} />,
-  ol: (props) => <ol className="mb-4 list-decimal pl-6 space-y-2" {...props} />,
-  li: (props) => <li className="leading-7" {...props} />,
+  ul: (props: ComponentProps) => (
+    <ul className="mb-4 list-disc pl-6 space-y-2" {...props} />
+  ),
+  ol: (props: ComponentProps) => (
+    <ol className="mb-4 list-decimal pl-6 space-y-2" {...props} />
+  ),
+  li: (props: ComponentProps) => <li className="leading-7" {...props} />,
 
   // Inline components
-  a: ({ href, children, ...props }) => (
+  a: ({ href, children, ...props }: ComponentProps & { href?: string }) => (
     <a
       href={href}
       className="text-blue-500 hover:text-blue-600 hover:underline transition-colors inline-block"
@@ -55,7 +66,17 @@ const components = {
   ),
 
   // Enhanced image component
-  img: ({ src, alt, width, style, ...props }) => {
+  img: ({
+    src = "",
+    alt,
+    width,
+    style,
+    ...props
+  }: ComponentProps & {
+    src?: string;
+    alt?: string;
+    width?: string | number;
+  }) => {
     // Function to verify if URL is valid
     const isValidUrl = (urlString: string) => {
       try {
@@ -103,7 +124,7 @@ const components = {
   },
 
   // Container components
-  div: ({ style, children, ...props }) => (
+  div: ({ style, children, ...props }: ComponentProps) => (
     <div style={style} className="w-full my-4" {...props}>
       {children}
     </div>
@@ -151,7 +172,7 @@ export default function MDXEditor() {
             const cssProps = styles
               .split(";")
               .filter(Boolean)
-              .map((prop) => {
+              .map((prop: string) => {
                 const [key, value] = prop.split(":").map((s) => s.trim());
                 return `${key}: "${value}"`;
               })
