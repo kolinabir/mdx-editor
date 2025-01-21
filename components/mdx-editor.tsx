@@ -310,43 +310,60 @@ export default function MDXEditor() {
       <div className="flex-1">
         <PanelGroup direction="horizontal">
           <Panel defaultSize={50} minSize={30}>
-            <div className="h-full">
-              <Editor
-                height="100%"
-                defaultLanguage="markdown"
-                value={content}
-                onChange={handleEditorChange}
-                theme={theme === "dark" ? "vs-dark" : "light"}
-                options={{
-                  minimap: { enabled: false },
-                  lineNumbers: "on",
-                  wordWrap: "on",
-                  scrollBeyondLastLine: false,
-                  automaticLayout: true,
-                }}
-              />
-            </div>
+            <PanelGroup direction="vertical">
+              <Panel defaultSize={80} minSize={10}>
+                <div className="h-full">
+                  <Editor
+                    height="100%"
+                    defaultLanguage="markdown"
+                    value={content}
+                    onChange={handleEditorChange}
+                    theme={theme === "dark" ? "vs-dark" : "light"}
+                    options={{
+                      minimap: { enabled: false },
+                      lineNumbers: "on",
+                      wordWrap: "on",
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                    }}
+                  />
+                </div>
+              </Panel>
+              <PanelResizeHandle className="h-2 bg-border hover:bg-primary/20 transition-colors" />
+              {/* <Panel defaultSize={20} minSize={10}>
+              </Panel> */}
+            </PanelGroup>
           </Panel>
 
           <PanelResizeHandle className="w-2 bg-border hover:bg-primary/20 transition-colors" />
 
           <Panel defaultSize={50} minSize={30}>
-            <ScrollArea className="h-full">
-              <div className="prose dark:prose-invert max-w-none p-8">
-                {compileError ? (
-                  <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-                    <h3 className="font-semibold">Compilation Error</h3>
-                    <p className="mt-1 text-sm whitespace-pre-wrap">
-                      {compileError}
-                    </p>
+            <PanelGroup direction="vertical">
+              <Panel defaultSize={80} minSize={10}>
+                <ScrollArea className="h-full">
+                  <div className="prose dark:prose-invert max-w-none p-8">
+                    {compileError ? (
+                      <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
+                        <h3 className="font-semibold">Compilation Error</h3>
+                        <p className="mt-1 text-sm whitespace-pre-wrap">
+                          {compileError}
+                        </p>
+                      </div>
+                    ) : compiledSource && mounted ? (
+                      <MDXProvider components={components}>
+                        <MDXRemote
+                          {...compiledSource}
+                          components={components}
+                        />
+                      </MDXProvider>
+                    ) : null}
                   </div>
-                ) : compiledSource && mounted ? (
-                  <MDXProvider components={components}>
-                    <MDXRemote {...compiledSource} components={components} />
-                  </MDXProvider>
-                ) : null}
-              </div>
-            </ScrollArea>
+                </ScrollArea>
+              </Panel>
+              <PanelResizeHandle className="h-2 bg-border hover:bg-primary/20 transition-colors" />
+              {/* <Panel defaultSize={20} minSize={10}>
+              </Panel> */}
+            </PanelGroup>
           </Panel>
         </PanelGroup>
       </div>
