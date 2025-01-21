@@ -6,8 +6,9 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MDX Editor",
-  description: "A simple MDX editor to edit and preview MDX content.",
+  title: "MDX Editor - Edit and preview MDX content",
+  description:
+    "A simple MDX editor to edit and preview MDX content. Edit your github README.md files with ease. Supports syntax highlighting, live preview, and more.",
 };
 
 export default function RootLayout({
