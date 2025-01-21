@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "MDX Editor",
-  description: "Professional MDX documentation editor and viewer",
+  description: "A simple MDX editor to edit and preview MDX content.",
 };
 
 export default function RootLayout({

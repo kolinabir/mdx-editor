@@ -13,7 +13,19 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Sun, Moon, Upload } from "lucide-react";
+import {
+  Copy,
+  Sun,
+  Moon,
+  Upload,
+  Code,
+  WrapText,
+  List,
+  AlignJustify,
+  Check,
+  AlertCircle,
+  Save,
+} from "lucide-react";
 import { MDXProvider } from "@mdx-js/react";
 import { MDXRemote } from "next-mdx-remote";
 
@@ -138,6 +150,49 @@ export default function MDXEditor() {
   const [compileError, setCompileError] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const [showMinimap, setShowMinimap] = useState(true);
+  const [wordWrap, setWordWrap] = useState("on");
+  const [showLineNumbers, setShowLineNumbers] = useState(true);
+  const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
+  const [editor, setEditor] = useState<any>(null);
+  const [decorations, setDecorations] = useState<string[]>([]);
+
+  // Add the styles constant inside the component
+  const styles = `
+    .error-line {
+      background-color: rgba(255, 0, 0, 0.1);
+    }
+    
+    .error-text {
+      text-decoration: wavy underline rgba(255, 0, 0, 0.8);
+    }
+    
+    .error-glyph {
+      background-color: red;
+      border-radius: 50%;
+      width: 8px !important;
+      height: 8px !important;
+      margin-left: 5px;
+      margin-top: 10px;
+    }
+    
+    .error-line-decoration {
+      background-color: red;
+      width: 3px !important;
+    }
+  `;
+
+  // Move the useEffect for styles inside the component
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const styleEl = document.createElement("style");
+      styleEl.innerHTML = styles;
+      document.head.appendChild(styleEl);
+      return () => {
+        document.head.removeChild(styleEl);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -213,6 +268,45 @@ export default function MDXEditor() {
     [toast]
   );
 
+  const decorateErrors = useCallback(() => {
+    if (!editor) return;
+
+    // Clear existing decorations
+    if (decorations.length > 0) {
+      editor.deltaDecorations(decorations, []);
+      setDecorations([]);
+    }
+
+    if (!compileError) return;
+
+    // Parse error message to get line number
+    const errorLineMatch = compileError.match(/(?:line\s+)?(\d+)/i);
+    const errorLine = errorLineMatch ? parseInt(errorLineMatch[1], 10) : 1;
+
+    // Add new decorations
+    const newDecorations = editor.deltaDecorations(
+      [],
+      [
+        {
+          range: new window.monaco.Range(errorLine, 1, errorLine, 1),
+          options: {
+            isWholeLine: true,
+            className: "error-line",
+            glyphMarginClassName: "error-glyph",
+            hoverMessage: { value: compileError },
+            minimap: {
+              color: { id: "errorForeground" },
+              position: 1,
+            },
+            linesDecorationsClassName: "error-line-decoration",
+          },
+        },
+      ]
+    );
+
+    setDecorations(newDecorations);
+  }, [editor, compileError, decorations]);
+
   useEffect(() => {
     if (!mounted) return;
 
@@ -235,6 +329,19 @@ export default function MDXEditor() {
       console.error("Failed to load content:", error);
     }
   }, [mounted]);
+
+  useEffect(() => {
+    decorateErrors();
+  }, [decorateErrors, compileError]);
+
+  // Add cleanup effect for decorations
+  useEffect(() => {
+    return () => {
+      if (editor && decorations.length > 0) {
+        editor.deltaDecorations(decorations, []);
+      }
+    };
+  }, [editor, decorations]);
 
   const handleEditorChange = (value: string | undefined) => {
     if (value === undefined) return;
@@ -280,6 +387,52 @@ export default function MDXEditor() {
     }
   };
 
+  const formatCode = useCallback(() => {
+    if (editor) {
+      // Get the current value
+      const value = editor.getValue();
+
+      try {
+        // Format the content
+        const formatted = value
+          // Remove multiple blank lines
+          .replace(/\n\s*\n\s*\n/g, "\n\n")
+          // Ensure single space after list markers
+          .replace(/^([\s]*[-+*])\s+/gm, "$1 ")
+          // Fix heading spaces
+          .replace(/^(#{1,6})\s*(.+?)\s*$/gm, "$1 $2")
+          // Normalize link syntax
+          .replace(/\[\s*(.+?)\s*\]\(\s*(.+?)\s*\)/g, "[$1]($2)")
+          // Fix inline code spacing
+          .replace(/`\s*(.+?)\s*`/g, "`$1`");
+
+        // Set the formatted content
+        editor.setValue(formatted);
+
+        toast({
+          title: "Success",
+          description: "Content formatted successfully",
+        });
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to format content",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [editor, toast]);
+
+  const handleEditorMount = (editor: any) => {
+    setEditor(editor);
+    editor.onDidChangeCursorPosition((e: any) => {
+      setCursorPosition({
+        line: e.position.lineNumber,
+        column: e.position.column,
+      });
+    });
+  };
+
   if (!mounted) {
     return null;
   }
@@ -288,7 +441,47 @@ export default function MDXEditor() {
     <div className="h-screen flex flex-col">
       <div className="border-b p-2 flex justify-between items-center">
         <h1 className="text-xl font-bold">GitHub README Editor</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={formatCode}
+            title="Format document"
+          >
+            <Save className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={formatCode}
+            title="Format code"
+          >
+            <Code className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setWordWrap(wordWrap === "on" ? "off" : "on")}
+            title="Toggle word wrap"
+          >
+            <WrapText className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowLineNumbers(!showLineNumbers)}
+            title="Toggle line numbers"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowMinimap(!showMinimap)}
+            title="Toggle minimap"
+          >
+            <AlignJustify className="h-4 w-4" />
+          </Button>
           <label htmlFor="file-upload">
             <Button
               variant="outline"
@@ -332,29 +525,57 @@ export default function MDXEditor() {
       <div className="flex-1">
         <PanelGroup direction="horizontal">
           <Panel defaultSize={50} minSize={30}>
-            <PanelGroup direction="vertical">
-              <Panel defaultSize={80} minSize={10}>
-                <div className="h-full">
-                  <Editor
-                    height="100%"
-                    defaultLanguage="markdown"
-                    value={content}
-                    onChange={handleEditorChange}
-                    theme={theme === "dark" ? "vs-dark" : "light"}
-                    options={{
-                      minimap: { enabled: false },
-                      lineNumbers: "on",
-                      wordWrap: "on",
-                      scrollBeyondLastLine: false,
-                      automaticLayout: true,
-                    }}
-                  />
+            <div className="h-full flex flex-col">
+              <Editor
+                height="calc(100% - 24px)"
+                defaultLanguage="markdown"
+                value={content}
+                onChange={handleEditorChange}
+                theme={theme === "dark" ? "vs-dark" : "light"}
+                onMount={handleEditorMount}
+                options={{
+                  minimap: { enabled: showMinimap },
+                  lineNumbers: showLineNumbers ? "on" : "off",
+                  wordWrap: wordWrap,
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  formatOnPaste: true,
+                  formatOnType: true,
+                  quickSuggestions: true,
+                  suggestOnTriggerCharacters: true,
+                  acceptSuggestionOnEnter: "on",
+                  tabSize: 2,
+                  detectIndentation: true,
+                  folding: true,
+                  foldingHighlight: true,
+                  renderControlCharacters: true,
+                  renderWhitespace: "selection",
+                  matchBrackets: "always",
+                  glyphMargin: true, // Enable glyph margin for error icons
+                  lineDecorationsWidth: 10,
+                  renderIndicators: true,
+                }}
+              />
+              <div className="h-6 border-t bg-muted px-2 text-xs flex items-center justify-between">
+                <div className="flex gap-4">
+                  <span>
+                    Ln {cursorPosition.line}, Col {cursorPosition.column}
+                  </span>
+                  <span>Markdown</span>
                 </div>
-              </Panel>
-              <PanelResizeHandle className="h-2 bg-border hover:bg-primary/20 transition-colors" />
-              {/* <Panel defaultSize={20} minSize={10}>
-              </Panel> */}
-            </PanelGroup>
+                <div className="flex gap-2 items-center">
+                  {compileError ? (
+                    <span className="text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> Error
+                    </span>
+                  ) : (
+                    <span className="text-green-500 flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Ready
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
           </Panel>
 
           <PanelResizeHandle className="w-2 bg-border hover:bg-primary/20 transition-colors" />
@@ -383,8 +604,6 @@ export default function MDXEditor() {
                 </ScrollArea>
               </Panel>
               <PanelResizeHandle className="h-2 bg-border hover:bg-primary/20 transition-colors" />
-              {/* <Panel defaultSize={20} minSize={10}>
-              </Panel> */}
             </PanelGroup>
           </Panel>
         </PanelGroup>

@@ -1,5 +1,10 @@
 {
-  "name": "nextjs",
+  "name": "github-readme-editor",
+  "description": "A GitHub Readme Editor to edit your README.md files with a live preview.",
+  "author": {
+    "name": "Abir Kolin",
+    "email": "knkolin9@gmail.com"
+  },
   "version": "0.1.0",
   "private": true,
   "scripts": {
