@@ -29,6 +29,14 @@ import {
 import { MDXProvider } from "@mdx-js/react";
 import { MDXRemote } from "next-mdx-remote";
 
+import type * as Monaco from "monaco-editor";
+
+declare global {
+  interface Window {
+    monaco: typeof Monaco;
+  }
+}
+
 type ComponentProps = {
   children?: React.ReactNode;
   style?: React.CSSProperties;
@@ -269,7 +277,7 @@ export default function MDXEditor() {
   );
 
   const decorateErrors = useCallback(() => {
-    if (!editor) return;
+    if (!editor || !window.monaco) return;
 
     // Clear existing decorations
     if (decorations.length > 0) {
